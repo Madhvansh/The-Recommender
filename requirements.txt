@@ -1,0 +1,15 @@
+# Core
+torch>=2.0.0
+numpy>=1.23.0
+pandas>=1.5.0
+scipy>=1.9.0
+pyyaml>=6.0
+tqdm>=4.64.0
+
+# Experiment tracking / config
+rich>=13.0.0
+
+# Data download
+requests>=2.28.0
+
+# Dev / test (see requirements-dev.txt for the full dev set)
