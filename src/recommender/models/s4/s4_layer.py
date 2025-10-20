@@ -27,7 +27,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .hippo import make_dplr_hippo
-from .kernel import discretize_diagonal, fft_conv, s4_kernel_dplr, s4_recurrent_step
+from .kernel import discretize_dplr_dense, fft_conv, s4_kernel_dplr, s4_recurrent_step
 
 
 def _as_complex(x: torch.Tensor) -> torch.Tensor:
@@ -136,13 +136,13 @@ class S4Layer(nn.Module):
         (y_t, new_state) with y_t shape (B, H).
         """
         lam, p, b, c, step = self._params()
-        lam_bar, b_bar = discretize_diagonal(lam, b, step, self.discretization)
+        a_bar, b_bar = discretize_dplr_dense(lam, p, p, b, step, self.discretization)
         if state is None:
             state = torch.zeros(
                 x_t.shape[0], self.d_model, self.state_size,
                 dtype=torch.cfloat, device=x_t.device,
             )
-        new_state, y_t = s4_recurrent_step(state, x_t, lam_bar, b_bar, c)
+        new_state, y_t = s4_recurrent_step(state, x_t, a_bar, b_bar, c)
         y_t = y_t + self.d.view(1, -1) * x_t
         return y_t, new_state
 

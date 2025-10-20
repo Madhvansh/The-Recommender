@@ -144,48 +144,76 @@ def fft_conv(u: torch.Tensor, kernel: torch.Tensor) -> torch.Tensor:
     return y[..., :seq_len]
 
 
-def discretize_diagonal(
+def discretize_dplr_dense(
     lam: torch.Tensor,
+    p: torch.Tensor,
+    q: torch.Tensor,
     b: torch.Tensor,
     step: torch.Tensor,
     method: str = "bilinear",
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Convenience wrapper: discretize ``(Lambda, B)`` for the recurrent path.
+    """Materialize the dense discretized ``(A_bar, B_bar)`` for the DPLR system.
 
-    Used by the step-by-step recurrence (:func:`s4_recurrent_step`) and tests
-    that compare the convolutional and recurrent views of the same SSM.
+    The convolutional kernel never forms ``A``, but the step-by-step recurrence
+    must use the *full* state matrix ``A = diag(Lambda) - P Q^*`` (not just the
+    diagonal part) to agree with the kernel.  This builds the dense ``(N, N)``
+    operator per channel and discretizes it with the bilinear or ZOH rule.
+
+    Parameters
+    ----------
+    lam, p, q, b : (H, N) complex.
+    step : (H,) or (H, 1) real.
+
+    Returns
+    -------
+    a_bar : (H, N, N) complex — discrete state-transition matrix.
+    b_bar : (H, N)    complex — discrete input map.
     """
-    step = step.view(-1, 1)
-    lam_bar, scale = discretize(lam, step, method)
-    return lam_bar, scale * b
+    h, n = lam.shape
+    eye = torch.eye(n, dtype=lam.dtype, device=lam.device).expand(h, n, n)
+    a = torch.diag_embed(lam) - p.unsqueeze(-1) * q.conj().unsqueeze(-2)  # (H, N, N)
+    dt = step.view(h, 1, 1).to(lam.dtype)
+    if method == "bilinear":
+        left = eye - dt / 2 * a
+        right = eye + dt / 2 * a
+        a_bar = torch.linalg.solve(left, right)
+        b_bar = torch.linalg.solve(left, (dt[..., 0] * b).unsqueeze(-1)).squeeze(-1)
+    elif method == "zoh":
+        a_bar = torch.linalg.matrix_exp(dt * a)
+        rhs = (a_bar - eye) @ b.unsqueeze(-1)
+        b_bar = torch.linalg.solve(a, rhs).squeeze(-1)
+    else:  # pragma: no cover - guarded by caller
+        raise ValueError(f"unknown discretization {method!r}")
+    return a_bar, b_bar
 
 
 def s4_recurrent_step(
     state: torch.Tensor,
     u_t: torch.Tensor,
-    lam_bar: torch.Tensor,
+    a_bar: torch.Tensor,
     b_bar: torch.Tensor,
     c: torch.Tensor,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Single step of the diagonal SSM recurrence (for inference / validation).
+    """Single step of the (dense DPLR) SSM recurrence, for inference / validation.
 
-    Implements ``x_t = lam_bar * x_{t-1} + b_bar * u_t`` and
-    ``y_t = Re(<c, x_t>)``.  This is the O(N) autoregressive view that S4 shares
-    with the O(L log L) convolutional view above; the two must agree, which the
-    test-suite asserts.
+    Implements ``x_t = A_bar x_{t-1} + B_bar u_t`` and ``y_t = Re(<c, x_t>)``.
+    This is the O(N^2) autoregressive view that S4 shares with the O(L log L)
+    convolutional view above; the two must agree, which the test-suite asserts.
 
     Parameters
     ----------
-    state   : (B, H, N) complex — previous hidden state.
-    u_t     : (B, H)    real    — current input per channel.
-    lam_bar : (H, N)    complex — discretized recurrence coefficients.
-    b_bar   : (H, N)    complex — discretized input map.
-    c       : (H, N)    complex — output map.
+    state : (B, H, N) complex — previous hidden state.
+    u_t   : (B, H)    real    — current input per channel.
+    a_bar : (H, N, N) complex — discretized state-transition matrix.
+    b_bar : (H, N)    complex — discretized input map.
+    c     : (H, N)    complex — output map.
 
     Returns
     -------
     (new_state, y_t) with shapes (B, H, N) and (B, H).
     """
-    new_state = lam_bar.unsqueeze(0) * state + b_bar.unsqueeze(0) * u_t.unsqueeze(-1)
-    y_t = 2.0 * (new_state * c.unsqueeze(0)).sum(dim=-1).real
+    # x_t = A_bar x_{t-1} + B_bar u_t,  batched over B and channels H.
+    decayed = torch.einsum("hij,bhj->bhi", a_bar, state)
+    new_state = decayed + b_bar.unsqueeze(0) * u_t.unsqueeze(-1)
+    y_t = (new_state * c.unsqueeze(0)).sum(dim=-1).real
     return new_state, y_t
