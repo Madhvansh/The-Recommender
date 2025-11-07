@@ -58,6 +58,10 @@ class SASRecBlock(nn.Module):
             key_padding_mask=key_padding_mask,
             need_weights=False,
         )
+        # Left-padded query positions attend to an all-masked key set, so their
+        # softmax is 0/0 -> NaN. Those positions are never read out, but the NaN
+        # would propagate through later layers via the residual; scrub it here.
+        a = torch.nan_to_num(a)
         x = x + a
         x = x + self.ffn(self.ffn_norm(x))
         return x
@@ -87,6 +91,8 @@ class SASRec(SequentialRecommender):
         b, length, _ = seq.shape
         positions = torch.arange(length, device=seq.device).unsqueeze(0)
         x = seq + self.pos_emb(positions.clamp(max=self.max_len - 1))
+        mask = pad_mask.unsqueeze(-1)
+        x = x * mask  # keep padded positions at zero going into attention
 
         # Causal mask: position i may only attend to j <= i.
         causal = torch.triu(
@@ -97,4 +103,5 @@ class SASRec(SequentialRecommender):
 
         for block in self.blocks:
             x = block(x, attn_mask=causal, key_padding_mask=key_padding)
+            x = x * mask  # re-mask so padded positions stay zero between blocks
         return self.final_norm(x)
