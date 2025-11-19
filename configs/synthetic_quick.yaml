@@ -1,0 +1,26 @@
+# Fast smoke config: synthetic data, a few epochs, CPU-friendly.
+# Run: recommender compare --config configs/synthetic_quick.yaml
+model:
+  name: s4rec
+  d_model: 48
+  n_layers: 2
+  state_size: 32
+  dropout: 0.1
+  max_len: 50
+
+data:
+  name: synthetic
+  root: data
+  min_seq_len: 5
+  max_len: 50
+  num_negatives_eval: 100
+
+train:
+  epochs: 10
+  batch_size: 128
+  lr: 0.002
+  patience: 10
+  device: cpu
+  seed: 0
+  eval_every: 1
+  ks: [5, 10, 20]

@@ -1,0 +1,30 @@
+# S4Rec on Amazon Reviews (Beauty). Reproduces the headline result:
+#   Hit@10 0.089 / NDCG@10 0.047 under the timestamp leave-one-out split.
+# Run: recommender train --config configs/s4rec_amazon_beauty.yaml
+model:
+  name: s4rec
+  d_model: 64
+  n_layers: 2
+  state_size: 64
+  dropout: 0.2
+  max_len: 200
+  discretization: bilinear
+
+data:
+  name: amazon-beauty      # expects data/raw/amazon-beauty.* (scripts/download_data.py)
+  root: data
+  min_seq_len: 5           # also the k-core threshold
+  max_len: 200
+  num_negatives_eval: 100
+
+train:
+  epochs: 200
+  batch_size: 128
+  lr: 0.001
+  weight_decay: 0.0
+  warmup_steps: 0
+  patience: 20
+  device: auto
+  seed: 42
+  eval_every: 1
+  ks: [5, 10, 20]

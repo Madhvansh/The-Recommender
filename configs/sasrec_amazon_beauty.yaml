@@ -1,0 +1,29 @@
+# SASRec self-attention baseline on Amazon Reviews (Beauty).
+# Matched capacity / objective / split to S4Rec for a fair comparison.
+# Run: recommender train --config configs/sasrec_amazon_beauty.yaml
+model:
+  name: sasrec
+  d_model: 64
+  n_layers: 2
+  n_heads: 2
+  dropout: 0.2
+  max_len: 200
+
+data:
+  name: amazon-beauty
+  root: data
+  min_seq_len: 5
+  max_len: 200
+  num_negatives_eval: 100
+
+train:
+  epochs: 200
+  batch_size: 128
+  lr: 0.001
+  weight_decay: 0.0
+  warmup_steps: 0
+  patience: 20
+  device: auto
+  seed: 42
+  eval_every: 1
+  ks: [5, 10, 20]
