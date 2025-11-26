@@ -59,13 +59,13 @@ class Config:
     extra: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
-    def from_yaml(cls, path: str | Path) -> "Config":
+    def from_yaml(cls, path: str | Path) -> Config:
         with open(path) as fh:
             raw = yaml.safe_load(fh) or {}
         return cls.from_dict(raw)
 
     @classmethod
-    def from_dict(cls, raw: dict[str, Any]) -> "Config":
+    def from_dict(cls, raw: dict[str, Any]) -> Config:
         raw = dict(raw)
         model = ModelConfig(**raw.pop("model", {}))
         data = DataConfig(**raw.pop("data", {}))

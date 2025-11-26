@@ -31,8 +31,6 @@ from __future__ import annotations
 
 import torch
 
-from .discretization import discretize
-
 
 def cauchy(v: torch.Tensor, omega: torch.Tensor, lam: torch.Tensor) -> torch.Tensor:
     """Cauchy matrix-vector product ``sum_n v[n] / (omega - lam[n])``.
