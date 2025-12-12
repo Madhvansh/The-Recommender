@@ -39,7 +39,7 @@ class Recommender:
         checkpoint_path: str | Path,
         num_items: int,
         device: str = "cpu",
-    ) -> "Recommender":
+    ) -> Recommender:
         cfg = Config.from_yaml(config_path)
         model = build_model(
             cfg.model.name,
