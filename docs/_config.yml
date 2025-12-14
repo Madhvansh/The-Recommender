@@ -1,0 +1,7 @@
+title: The Recommender
+description: >-
+  State-space (S4) sequential recommender for next-item prediction — a
+  from-scratch Structured State-Space kernel benchmarked against a SASRec
+  self-attention baseline.
+theme: jekyll-theme-cayman
+show_downloads: false
