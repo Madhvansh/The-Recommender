@@ -1,9 +1,14 @@
 # Experiments & results
 
+> **Reproduction status:** the tables below are retained from the original local
+> runs. Raw predictions, checkpoints or hashes, dependency locks, and multi-seed
+> reruns are not yet published. Treat the numbers as preliminary and follow
+> [reproducibility.md](reproducibility.md) before citing them as a benchmark.
+
 ## S4 engine validation (sequence classification)
 
-Before using S4 as a recommendation backbone, the kernel is validated
-independently on **pixel-by-pixel sequential MNIST (sMNIST)** — the canonical
+Before using S4 as a recommendation backbone, the kernel is exercised on
+**pixel-by-pixel sequential MNIST (sMNIST)** — a standard
 long-range benchmark for state-space models — via
 [`scripts/benchmark_s4_classification.py`](../scripts/benchmark_s4_classification.py).
 
@@ -28,11 +33,14 @@ models (`d=64`, 2 layers, AdamW, full-softmax cross-entropy).
 | Model | Hit@10 | NDCG@10 | Hit@5 | NDCG@5 |
 |---|---|---|---|---|
 | SASRec (self-attention baseline) | 0.0802 | 0.0412 | 0.0547 | 0.0331 |
-| **S4Rec (ours)** | **0.0890** | **0.0470** | **0.0612** | **0.0381** |
+| **S4 implementation** | **0.0890** | **0.0470** | **0.0612** | **0.0381** |
 | Δ vs SASRec | **+11.0%** | **+14.1%** | +11.9% | +15.1% |
 
-S4Rec outperforms the self-attention baseline on every metric while scaling as
-`O(L log L)` instead of `O(L²)` in sequence length.
+The recorded S4 run is higher than the included self-attention baseline on each
+reported metric. Multi-seed reruns are required before treating the difference
+as a stable performance advantage. The S4 mixing operation scales as
+`O(L log L)` rather than the baseline attention operation's `O(L²)` in sequence
+length.
 
 Reproduce:
 

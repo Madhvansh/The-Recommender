@@ -1,12 +1,14 @@
-# The Recommender — State-Space Sequential Recommendation (S4)
+# The Recommender — State-Space Sequential Recommendation
 
 A PyTorch sequential recommender that frames recommendation as **next-item
 prediction** and uses a **from-scratch Structured State-Space (S4)** kernel as
-its sequence backbone — benchmarked head-to-head against a **SASRec**
-self-attention baseline on Amazon Reviews.
+its sequence backbone, benchmarked head-to-head against a **SASRec**
+self-attention baseline on Amazon Reviews. This repository is an implementation
+and evaluation project; it does not claim to introduce the S4 architecture or a
+novel recommender model.
 
 [![CI](https://github.com/Madhvansh/The-Recommender/actions/workflows/ci.yml/badge.svg)](https://github.com/Madhvansh/The-Recommender/actions/workflows/ci.yml)
-![python](https://img.shields.io/badge/python-3.9%2B-blue)
+![python](https://img.shields.io/badge/python-3.10%2B-blue)
 ![pytorch](https://img.shields.io/badge/PyTorch-2.0%2B-ee4c2c)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -18,10 +20,10 @@ self-attention baseline on Amazon Reviews.
   bilinear & ZOH discretization, and an FFT long-convolution via the
   Cauchy/Woodbury generating function. No `pykeops`, no custom CUDA — just
   PyTorch complex tensors. ([deep dive](docs/s4_kernel.md))
-- 🔬 **Engine independently validated** at **86.8%** on pixel-by-pixel
+- 🔬 **Recorded engine validation run** reached **86.8%** on pixel-by-pixel
   sequential MNIST, a standard long-range benchmark.
-- 🏆 **Beats SASRec on Amazon Reviews**: **Hit@10 0.089 / NDCG@10 0.047**
-  — **+11% / +14%** over the self-attention baseline.
+- 🧪 **Preliminary Amazon Reviews comparison** reports **Hit@10 0.089 /
+  NDCG@10 0.047**, or **+11% / +14%** over the included SASRec baseline.
 - 🛡️ **Leakage-free evaluation** via a **timestamp leave-one-out** split (no
   random-split future-leakage), unit-tested.
 - ⚡ **O(L log L)** sequence mixing vs SASRec's O(L²); intrinsically causal, no
@@ -29,14 +31,20 @@ self-attention baseline on Amazon Reviews.
 - 🚀 **End-to-end**: data download → training → evaluation → a FastAPI serving
   API + Docker image.
 
-## Results
+## Preliminary results
+
+> [!IMPORTANT]
+> The figures below are retained from the original local runs. Raw predictions,
+> model hashes, environment locks, and multi-seed reruns have not yet been
+> published, so they are not independently reproduced benchmark claims. Follow
+> the [`reproducibility checklist`](docs/reproducibility.md) before citing them.
 
 ### Amazon Reviews (Beauty) — timestamp leave-one-out, 100 sampled negatives
 
 | Model | Hit@10 | NDCG@10 | Hit@5 | NDCG@5 |
 |---|---|---|---|---|
 | SASRec (self-attention baseline) | 0.0802 | 0.0412 | 0.0547 | 0.0331 |
-| **S4Rec (ours)** | **0.0890** | **0.0470** | **0.0612** | **0.0381** |
+| **S4 implementation** | **0.0890** | **0.0470** | **0.0612** | **0.0381** |
 | **Δ vs SASRec** | **+11.0%** | **+14.1%** | +11.9% | +15.1% |
 
 ### S4 engine validation — sequence classification
@@ -46,6 +54,18 @@ self-attention baseline on Amazon Reviews.
 | `S4Classifier` | sequential MNIST (L=784) | **86.8%** |
 
 Full details and reproduction commands: [docs/experiments.md](docs/experiments.md).
+
+## Status and limitations
+
+- Research implementation, not a production recommendation service.
+- Headline results currently represent recorded local runs rather than a
+  multi-seed study with uncertainty intervals.
+- Evaluation ranks each target against 100 sampled negatives; it is not a
+  full-catalog retrieval result.
+- The internal `s4rec` identifier is a convenient implementation name, not a
+  novelty or priority claim over prior state-space recommender research.
+- The synthetic smoke comparison verifies execution and interfaces, not model
+  quality. On synthetic data either backbone may win or tie.
 
 ## How it works
 
@@ -163,6 +183,13 @@ scripts/    configs/    docs/    tests/    Dockerfile
 - Rush & Karamcheti. *The Annotated S4.* 2022.
 - Kang & McAuley. *Self-Attentive Sequential Recommendation (SASRec).* ICDM 2018.
 - Hou et al. *Amazon Reviews 2023* (McAuley Lab).
+
+## Contributing and security
+
+Substantive reproductions, bug fixes, evaluation improvements, and documentation
+corrections are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md). Report
+security-sensitive findings through the process in [SECURITY.md](SECURITY.md),
+not a public issue.
 
 ## License
 
