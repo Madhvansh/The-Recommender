@@ -7,8 +7,8 @@ name = "the-recommender"
 version = "0.4.0"
 description = "State-space (S4) sequential recommender for next-item prediction, benchmarked against a SASRec self-attention baseline."
 readme = "README.md"
-requires-python = ">=3.9"
-license = { text = "MIT" }
+requires-python = ">=3.10"
+license = "MIT"
 authors = [{ name = "Madhvansh" }]
 keywords = [
     "recommender-systems",
@@ -21,7 +21,6 @@ keywords = [
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dynamic = ["dependencies", "optional-dependencies"]
