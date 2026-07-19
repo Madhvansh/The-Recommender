@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using this metadata."
+title: "The Recommender: State-Space Sequential Recommendation"
+type: software
+authors:
+  - family-names: Choksi
+    given-names: Madhvansh
+repository-code: "https://github.com/Madhvansh/The-Recommender"
+url: "https://madhvansh.github.io/The-Recommender/"
+license: MIT
+version: 0.4.0
+date-released: 2026-06-14

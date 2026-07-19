@@ -1,0 +1,26 @@
+name: Experiment reproduction
+description: Report a confirmed result, discrepancy, or failed reproduction
+title: "[Reproduction]: "
+labels: [reproduction]
+body:
+  - type: textarea
+    id: target
+    attributes:
+      label: Result being reproduced
+      description: Link the exact table, commit, config, or release.
+    validations:
+      required: true
+  - type: textarea
+    id: protocol
+    attributes:
+      label: Protocol and environment
+      description: Dataset checksum, split, config, seed, dependencies, and hardware.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome and artifacts
+      description: Provide per-run metrics and links to raw artifacts where possible.
+    validations:
+      required: true
